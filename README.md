@@ -5,7 +5,7 @@ AI crypto trading, research, and data operations via natural language — built 
 ## Install
 
 ```bash
-npx skills droyd-ai/droyd-skills
+npx skills add droyd-ai/droyd-skills
 ```
 
 ## Setup
