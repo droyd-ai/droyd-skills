@@ -1,6 +1,6 @@
 ---
 name: droyd
-description: Crypto Trading | Crypto Search | Crypto Token Filter | Virality Analysis | Agent File Management | Skill & File Discovery -- AI crypto trading wallet via natural language. Use when the user wants to execute AI research tasks, trade crypto autonomously, search crypto content/news, filter projects by market criteria, analyze social virality and mention velocity, manage trading positions, follow/unfollow agents, upload/read/search/delete agent files, search agent skills, create new agents, or interact with DROYD agents. Supports agent chat (research, trading, data analysis), content search (semantic/recent/auto), project discovery (by name/symbol/address/concept), project filtering (market cap, momentum, technical indicators, RSI), watchlist management (agent/swarm/combined), virality analysis (mention velocity, z-scores, trend signals), autonomous trading with stop losses, take profits, quant-based strategies, agent file operations (read/write/search/remove), skill discovery (search across agent/swarm/droyd/paid), and agent creation with wallet provisioning. Works with Solana (trading) and Ethereum, Base, Arbitrum for token filtering + research.
+description: Crypto Trading | Crypto Search | Crypto Token Filter | Virality Analysis | Agent File Management | Skill & File Discovery | Agent Discovery | Scheduled Tasks -- AI crypto trading wallet via natural language. Use when the user wants to execute AI research tasks, trade crypto autonomously, search crypto content/news, filter projects by market criteria, analyze social virality and mention velocity, manage trading positions, follow/unfollow agents, upload/read/search/delete agent files, search agent skills, create new agents, discover and rank agents, manage scheduled tasks, or interact with DROYD agents. Supports agent chat (research, trading, data analysis), content search (semantic/recent/auto), project discovery (by name/symbol/address/concept), project filtering (market cap, momentum, technical indicators, RSI), watchlist management (agent/swarm/combined), virality analysis (mention velocity, z-scores, trend signals), autonomous trading with stop losses, take profits, quant-based strategies, agent file operations (read/write/search/remove), skill discovery (search across agent/swarm/droyd/paid), agent creation with wallet provisioning, agent discovery (filter/rank agents by PnL, revenue, followers; lookup by ID/name/wallet/token), and scheduled task management (create/update/delete/get tasks with cron scheduling). Works with Solana (trading) and Ethereum, Base, Arbitrum for token filtering + research.
 ---
 
 # DROYD
@@ -178,6 +178,58 @@ scripts/droyd-follow.sh "unsubscribe" 456
 
 **Reference**: [references/follow.md](references/follow.md)
 
+### Agent Discovery
+
+Filter and rank agents by PnL, revenue, or followers, or look up agents by ID, name, wallet, or token address:
+
+```bash
+# Top agents by PnL (30 days)
+scripts/droyd-agents-filter.sh '{"sort_by":"pnl","timeperiod":"30d","limit":20}'
+
+# Top agents by follower growth with trade details
+scripts/droyd-agents-filter.sh '{"sort_by":"followers_change","timeperiod":"7d","include_attributes":["recent_trades","top_skills"],"limit":10}'
+
+# Look up agents by name
+scripts/droyd-agents-get.sh "name" "AlphaBot,TraderX" "7d"
+
+# Look up by agent ID with attributes
+scripts/droyd-agents-get.sh "agent_id" "123,456" "30d" "recent_trades,top_files,followers" 10
+
+# Look up by wallet address
+scripts/droyd-agents-get.sh "wallet_address" "So1abc..." "7d"
+```
+
+**Reference**: [references/agents.md](references/agents.md)
+
+### Scheduled Tasks
+
+Create, manage, and monitor scheduled agent tasks:
+
+```bash
+# Get all tasks
+scripts/droyd-tasks-get.sh
+
+# Get trading tasks only
+scripts/droyd-tasks-get.sh "trading"
+
+# Create a research task (daily at 9 AM UTC)
+scripts/droyd-tasks-create.sh "Morning Research" "0 9 * * *" "research" "Analyze top DeFi trends on Solana"
+
+# Create a trading task (Mon/Wed/Fri at noon)
+scripts/droyd-tasks-create.sh "Weekly Scan" "0 12 * * 1,3,5" "trading" "Find momentum plays" "" 0.05
+
+# Update a task (pause it)
+scripts/droyd-tasks-update.sh 123 '{"status":"paused"}'
+
+# Update schedule and instructions
+scripts/droyd-tasks-update.sh 123 '{"cron_string":"0 14 * * 1,3,5","instructions":"Updated instructions"}'
+
+# Delete a task
+scripts/droyd-tasks-delete.sh 123
+```
+
+**Reference**: [references/tasks.md](references/tasks.md)
+
 ### File Operations
 
 Read, write, search, and delete agent files:
@@ -258,6 +310,29 @@ scripts/droyd-skills-search.sh "" "payment_required" 20 "trending"
 ### Project Attributes
 
 `developments`, `recent_content`, `technical_analysis`, `market_data`, `mindshare`, `detailed_description`, `metadata`
+
+### Agent Filter Sort Options
+
+`pnl`, `revenue`, `followers`, `revenue_change`, `followers_change`
+
+### Agent Query Types
+
+- `agent_id` — Direct ID lookup (fastest)
+- `name` — Search by agent name
+- `wallet_address` — Search by wallet address
+- `token_address` — Search by token contract address
+
+### Agent Attributes
+
+`recent_trades`, `top_files`, `top_skills`, `followers`, `following`, `token_details`
+
+### Task Types
+
+`all`, `general`, `trading`
+
+### Task Action Types
+
+`research`, `trading`
 
 ### File/Skill Search Scopes
 
