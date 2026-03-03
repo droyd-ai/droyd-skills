@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Create a DROYD scheduled task
-# Usage: droyd-tasks-create.sh <title> <cron> [action_type] [instructions] [notifications] [budget_pct]
-# Action types: research (default), trading
-# Example: droyd-tasks-create.sh "Morning Research" "0 9 * * *" "research" "Analyze top DeFi trends"
-# Example: droyd-tasks-create.sh "Weekly Scan" "0 12 * * 1,3,5" "trading" "Find momentum plays" "" 0.05
+# Create a scheduled task with cron schedule
+# Usage: droyd-tasks-create.sh <task_title> <cron_string> [action_type] [instructions] [portfolio_budget_percent]
+# action_type: research (default), trading
+# Example: droyd-tasks-create.sh "Daily DeFi Research" "30 9 * * *" "research" "Research latest DeFi trends on Solana"
+# Example: droyd-tasks-create.sh "Weekly Trading Scan" "0 12 * * 1,3,5" "trading" "" 0.05
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,30 +11,22 @@ source "$SCRIPT_DIR/droyd.sh"
 
 TITLE="${1:-}"
 CRON="${2:-}"
-ACTION_TYPE="${3:-research}"
+ACTION_TYPE="${3:-}"
 INSTRUCTIONS="${4:-}"
-NOTIFICATIONS="${5:-}"
-BUDGET_PCT="${6:-}"
+BUDGET_PCT="${5:-}"
 
 if [[ -z "$TITLE" || -z "$CRON" ]]; then
-  echo "Usage: droyd-tasks-create.sh <title> <cron> [action_type] [instructions] [notifications] [budget_pct]" >&2
-  echo "Action types: research (default), trading" >&2
+  echo "Usage: droyd-tasks-create.sh <task_title> <cron_string> [action_type] [instructions] [portfolio_budget_percent]" >&2
+  echo "  action_type: research (default), trading" >&2
   exit 1
 fi
 
-# Convert comma-separated to JSON array
-to_json_array() {
-  echo "$1" | tr ',' '\n' | jq -R . | jq -s .
-}
+# Build request with required fields
+DATA=$(jq -n --arg title "$TITLE" --arg cron "$CRON" \
+  '{task_title: $title, cron_string: $cron}')
 
-DATA=$(jq -n \
-  --arg title "$TITLE" \
-  --arg cron "$CRON" \
-  --arg action "$ACTION_TYPE" \
-  '{task_title: $title, cron_string: $cron, action_type: $action}')
-
+[[ -n "$ACTION_TYPE" ]] && DATA=$(echo "$DATA" | jq --arg v "$ACTION_TYPE" '. + {action_type: $v}')
 [[ -n "$INSTRUCTIONS" ]] && DATA=$(echo "$DATA" | jq --arg v "$INSTRUCTIONS" '. + {instructions: $v}')
-[[ -n "$NOTIFICATIONS" ]] && DATA=$(echo "$DATA" | jq --argjson v "$(to_json_array "$NOTIFICATIONS")" '. + {notification_destinations: $v}')
 [[ -n "$BUDGET_PCT" ]] && DATA=$(echo "$DATA" | jq --argjson v "$BUDGET_PCT" '. + {portfolio_budget_percent: $v}')
 
 droyd_request "POST" "/api/v1/tasks/create" "$DATA"

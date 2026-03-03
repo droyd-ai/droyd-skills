@@ -1,27 +1,22 @@
 # Scheduled Tasks
 
-Create, manage, and monitor scheduled agent tasks with cron-based scheduling.
-
-## Endpoints
-
-- `POST /api/v1/tasks/get` or `GET /api/v1/tasks/get` - Get scheduled tasks
-- `POST /api/v1/tasks/create` - Create a scheduled task
-- `POST /api/v1/tasks/update` - Update a scheduled task
-- `POST /api/v1/tasks/delete` - Delete a scheduled task
+Create, read, update, and delete scheduled tasks. Tasks run on cron schedules and can perform research or trading actions automatically.
 
 ---
 
-## Get Scheduled Tasks
+## Get Tasks
 
 `POST /api/v1/tasks/get` or `GET /api/v1/tasks/get`
+
+Retrieve scheduled tasks for your agent. Returns active tasks with recent execution history.
 
 ### Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `task_types` | string | No | `all` | `all`, `general`, or `trading` |
+| `task_types` | string | No | `all` | Filter: `all`, `general`, or `trading` |
 | `scheduled_task_ids` | number[] | No | - | Fetch specific tasks by ID |
-| `limit` | number | No | `50` | Max results (1-100) |
+| `limit` | number | No | `50` | Max tasks to return (1-100) |
 
 ### Examples
 
@@ -33,7 +28,10 @@ scripts/droyd-tasks-get.sh
 scripts/droyd-tasks-get.sh "trading"
 
 # Get specific tasks by ID
-scripts/droyd-tasks-get.sh "" "123,456" 10
+scripts/droyd-tasks-get.sh "" "123,456"
+
+# Get general tasks, limited to 10
+scripts/droyd-tasks-get.sh "general" "" 10
 ```
 
 ### Response
@@ -50,6 +48,8 @@ scripts/droyd-tasks-get.sh "" "123,456" 10
       "instructions": "Research the latest DeFi trends on Solana",
       "cron_string": "30 9 * * *",
       "notification_destinations": [],
+      "default_strategy_legs": null,
+      "portfolio_budget_percent": null,
       "recent_tasks": [
         {
           "completed_at": "2025-01-15T09:35:00Z",
@@ -62,34 +62,43 @@ scripts/droyd-tasks-get.sh "" "123,456" 10
 }
 ```
 
+### Notes
+
+- Only returns active tasks
+- `general` maps to research-type tasks internally
+- Response includes compact task config + recent execution summaries
+
 ---
 
-## Create Scheduled Task
+## Create Task
 
 `POST /api/v1/tasks/create`
+
+Create a new scheduled task with a cron schedule.
 
 ### Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `task_title` | string | Yes | - | Task title (1-200 chars) |
+| `task_title` | string | Yes | - | Task title (1-200 characters) |
 | `cron_string` | string | Yes | - | Cron schedule (e.g. `"30 9 * * *"`) |
 | `action_type` | string | No | `research` | `research` or `trading` |
-| `instructions` | string | Conditional | - | Task instructions (1-5000 chars). Required for research tasks. |
+| `instructions` | string | Conditional | - | Task instructions (1-5000 chars). Required for research, optional for trading |
 | `notification_destinations` | string[] | No | `[]` | Notification channels |
-| `portfolio_budget_percent` | number | No | - | Budget allocation for trading (0-1) |
+| `portfolio_budget_percent` | number | No | - | Portfolio budget allocation (0-1, trading tasks) |
+| `default_strategy_legs` | object | No | - | Default trading strategy legs |
 
 ### Examples
 
 ```bash
-# Create a daily research task
-scripts/droyd-tasks-create.sh "Morning Research" "0 9 * * *" "research" "Analyze top DeFi trends on Solana"
+# Daily research task
+scripts/droyd-tasks-create.sh "Daily DeFi Research" "30 9 * * *" "research" "Research latest DeFi trends on Solana"
 
-# Create a trading task
-scripts/droyd-tasks-create.sh "Weekly Scan" "0 12 * * 1,3,5" "trading" "Find momentum plays" "" 0.05
+# Trading scan on weekdays
+scripts/droyd-tasks-create.sh "Weekly Trading Scan" "0 12 * * 1,3,5" "trading" "" 0.05
 
-# Simple research task (action_type defaults to research)
-scripts/droyd-tasks-create.sh "Evening Report" "0 18 * * *" "" "Summarize daily crypto news"
+# Minimal research task (defaults to research type)
+scripts/droyd-tasks-create.sh "Morning Briefing" "0 8 * * *" "" "Summarize overnight crypto developments"
 ```
 
 ### Response (201)
@@ -101,21 +110,30 @@ scripts/droyd-tasks-create.sh "Evening Report" "0 18 * * *" "" "Summarize daily 
     "scheduled_task_id": 123,
     "owner_id": 1,
     "agent_id": 5,
-    "task_title": "Morning Research",
+    "task_title": "Daily DeFi Research",
     "action_type": "research",
-    "instructions": "Analyze top DeFi trends on Solana",
+    "instructions": "Research latest DeFi trends...",
     "status": "active",
-    "cron_string": "0 9 * * *",
+    "cron_string": "30 9 * * *",
     "schedule_id": "sched_abc123"
   }
 }
 ```
 
+### Notes
+
+- Task creation is subject to plan limits (free: 1, pro: 10 active tasks)
+- Returns `403` if task limit reached
+- Trading tasks get default strategy legs and instructions if not provided
+- Tasks begin executing at the next scheduled time
+
 ---
 
-## Update Scheduled Task
+## Update Task
 
 `POST /api/v1/tasks/update`
+
+Update properties of an existing scheduled task.
 
 ### Parameters
 
@@ -128,46 +146,41 @@ scripts/droyd-tasks-create.sh "Evening Report" "0 18 * * *" "" "Summarize daily 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `task_title` | string | Task title (1-200 chars) |
-| `instructions` | string | Task instructions (1-5000 chars) |
+| `task_title` | string | Task title (1-200 characters) |
+| `instructions` | string | Task instructions (1-5000 characters) |
 | `status` | string | `active` or `paused` |
 | `action_type` | string | `research` or `trading` |
-| `cron_string` | string | New cron schedule |
+| `cron_string` | string | Cron schedule expression |
 | `notification_destinations` | string[] | Notification channels |
-| `portfolio_budget_percent` | number | Budget allocation (0-1) |
+| `portfolio_budget_percent` | number | Portfolio budget (0-1) |
+| `default_strategy_legs` | object | Trading strategy legs |
 
 ### Examples
 
 ```bash
-# Update instructions
-scripts/droyd-tasks-update.sh 123 '{"instructions":"Research DeFi trends on Solana and Base"}'
-
 # Pause a task
 scripts/droyd-tasks-update.sh 123 '{"status":"paused"}'
 
 # Resume and change schedule
 scripts/droyd-tasks-update.sh 123 '{"status":"active","cron_string":"0 14 * * 1,3,5"}'
+
+# Update instructions
+scripts/droyd-tasks-update.sh 123 '{"instructions":"Research DeFi trends on Solana and Base"}'
 ```
 
-### Response
+### Notes
 
-```json
-{
-  "success": true,
-  "data": {
-    "scheduled_task_id": 123,
-    "task_title": "Morning Research",
-    "status": "active",
-    "cron_string": "0 14 * * 1,3,5"
-  }
-}
-```
+- Changing `cron_string` automatically updates the schedule
+- Pausing removes the schedule; resuming recreates it
+- Returns `404` if the task doesn't exist or doesn't belong to your agent
 
 ---
 
-## Delete Scheduled Task
+## Delete Task
 
 `POST /api/v1/tasks/delete`
+
+Soft-delete a scheduled task.
 
 ### Parameters
 
@@ -189,24 +202,29 @@ scripts/droyd-tasks-delete.sh 123
 }
 ```
 
+### Notes
+
+- Performs soft delete (sets status to `cancelled`)
+- Automatically removes the associated schedule
+- Returns `404` if the task doesn't exist or doesn't belong to your agent
+
 ---
 
-## Cron String Reference
+## Task Types
 
-| Expression | Meaning |
-|-----------|---------|
-| `0 9 * * *` | Daily at 9:00 AM UTC |
-| `30 9 * * *` | Daily at 9:30 AM UTC |
+| Type | Description |
+|------|-------------|
+| `research` | AI research tasks — content analysis, report generation |
+| `trading` | Autonomous trading scans with budget allocation |
+
+## Common Cron Patterns
+
+| Pattern | Schedule |
+|---------|----------|
+| `0 9 * * *` | Daily at 9:00 UTC |
+| `30 9 * * *` | Daily at 9:30 UTC |
 | `0 */4 * * *` | Every 4 hours |
-| `0 12 * * 1,3,5` | Mon/Wed/Fri at noon UTC |
-| `0 0 * * 1` | Weekly on Monday at midnight UTC |
+| `0 12 * * 1,3,5` | Mon/Wed/Fri at 12:00 UTC |
+| `0 8 * * 1-5` | Weekdays at 8:00 UTC |
+| `0 0 * * 0` | Weekly on Sunday at midnight |
 | `0 0 1 * *` | Monthly on the 1st at midnight UTC |
-
-## Notes
-
-- Only active tasks are returned by the get endpoint
-- `general` maps to research-type tasks internally
-- Task creation is subject to plan limits (free: 1, pro: 10 active tasks)
-- Returns `403` if the task limit is reached
-- Pausing a task removes its schedule; resuming recreates it
-- Deleting performs a soft delete (sets status to `cancelled`)

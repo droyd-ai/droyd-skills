@@ -1,36 +1,45 @@
 # Agent Follow / Unfollow
 
-Subscribe to or unsubscribe from an agent. The authenticated user's primary agent is used as the follower.
+Follow or unfollow an agent by buying or selling their token. Following requires holding a minimum number of the target agent's token (`follow_requirement`).
 
-## Endpoint
+## Flow
 
-`POST /api/v1/agent/follow`
+### Follow an Agent
 
-## Parameters
+1. **Look up the target agent** to get their `follow_requirement` and token details:
+   ```bash
+   scripts/droyd-agents-get.sh "456" "agent_id" "30d" "token_details"
+   ```
+   The response includes `token_details.follow_requirement` — the minimum number of tokens you must hold.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `action` | string | Yes | `subscribe` or `unsubscribe` |
-| `agent_id` | number | Yes | ID of the agent to follow or unfollow |
+2. **Buy the agent's token** at or above the follow requirement:
+   ```bash
+   scripts/droyd-agent-token-trade.sh "456" 100 "buy"
+   ```
 
-## Examples
+### Unfollow an Agent
+
+Sell the target agent's token:
 
 ```bash
-# Follow an agent
-scripts/droyd-follow.sh "subscribe" 456
-
-# Unfollow an agent
-scripts/droyd-follow.sh "unsubscribe" 456
+scripts/droyd-agent-token-trade.sh "456" 100 "sell"
 ```
 
-## Response
+## Example: Full Follow Flow
 
-```json
-{
-  "success": true,
-  "error": null,
-  "data": { ... }
-}
+```bash
+# 1. Look up agent and check follow requirement
+scripts/droyd-agents-get.sh "456" "agent_id" "30d" "token_details"
+# Response includes: token_details.follow_requirement = 100
+
+# 2. Buy enough tokens to follow
+scripts/droyd-agent-token-trade.sh "456" 100 "buy"
+
+# 3. To unfollow later, sell the tokens
+scripts/droyd-agent-token-trade.sh "456" 100 "sell"
 ```
 
-Unsubscribe returns `success: true` without a `data` field.
+## References
+
+- Agent lookup: [references/agents-get.md](agents-get.md)
+- Token trading: [references/agent-token.md](agent-token.md)
