@@ -201,29 +201,6 @@ scripts/droyd-agent-token-trade.sh "456" 100 "sell"
 
 **Reference**: [references/follow.md](references/follow.md)
 
-### Agent Discovery
-
-Filter and rank agents by PnL, revenue, or followers, or look up agents by ID, name, wallet, or token address:
-
-```bash
-# Top agents by PnL (30 days)
-scripts/droyd-agents-filter.sh '{"sort_by":"pnl","timeperiod":"30d","limit":20}'
-
-# Top agents by follower growth with trade details
-scripts/droyd-agents-filter.sh '{"sort_by":"followers_change","timeperiod":"7d","include_attributes":["recent_trades","top_skills"],"limit":10}'
-
-# Look up agents by name
-scripts/droyd-agents-get.sh "name" "AlphaBot,TraderX" "7d"
-
-# Look up by agent ID with attributes
-scripts/droyd-agents-get.sh "agent_id" "123,456" "30d" "recent_trades,top_files,followers" 10
-
-# Look up by wallet address
-scripts/droyd-agents-get.sh "wallet_address" "So1abc..." "7d"
-```
-
-**Reference**: [references/agents.md](references/agents.md)
-
 ### Scheduled Tasks
 
 Create, manage, and monitor scheduled agent tasks:
@@ -239,7 +216,7 @@ scripts/droyd-tasks-get.sh "trading"
 scripts/droyd-tasks-create.sh "Morning Research" "0 9 * * *" "research" "Analyze top DeFi trends on Solana"
 
 # Create a trading task (Mon/Wed/Fri at noon)
-scripts/droyd-tasks-create.sh "Weekly Scan" "0 12 * * 1,3,5" "trading" "Find momentum plays" "" 0.05
+scripts/droyd-tasks-create.sh "Weekly Scan" "0 12 * * 1,3,5" "trading" "Find momentum plays" 0.05
 
 # Update a task (pause it)
 scripts/droyd-tasks-update.sh 123 '{"status":"paused"}'
@@ -292,32 +269,6 @@ scripts/droyd-skills-search.sh "" "payment_required" 20 "trending"
 ```
 
 **Reference**: [references/skills-search.md](references/skills-search.md)
-
-### Scheduled Tasks
-
-Create, manage, and delete cron-scheduled research and trading tasks:
-
-```bash
-# Get all active tasks
-scripts/droyd-tasks-get.sh
-
-# Get trading tasks only
-scripts/droyd-tasks-get.sh "trading" "" 10
-
-# Create a daily research task
-scripts/droyd-tasks-create.sh "Daily DeFi Research" "30 9 * * *" "research" "Research latest DeFi trends on Solana"
-
-# Create a trading scan task
-scripts/droyd-tasks-create.sh "Weekly Trading Scan" "0 12 * * 1,3,5" "trading" "" 0.05
-
-# Update a task (pause, change schedule, update instructions)
-scripts/droyd-tasks-update.sh '{"scheduled_task_id":123,"patch":{"status":"paused"}}'
-
-# Delete a task
-scripts/droyd-tasks-delete.sh 123
-```
-
-**Reference**: [references/tasks.md](references/tasks.md)
 
 ### Agent Token
 
