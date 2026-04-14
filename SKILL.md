@@ -425,6 +425,12 @@ scripts/droyd-fundamentals-snapshot.sh '{"metrics":["tvl","fees","revenue"],"gro
 | `recent` | Browse latest content by type, ecosystem, category |
 | `semantic` | AI-powered question answering with analysis |
 
+### Ecosystem & Category IDs
+
+When users reference ecosystems or categories by name (e.g. "AI tokens", "Solana projects", "DeFi"), look up the numeric ID from the reference and pass it as the `ecosystem_ids` or `category_ids` parameter.
+
+**Reference**: [references/eco_category_ids.md](references/eco_category_ids.md)
+
 ### Content Types
 
 `posts`, `news`, `developments`, `tweets`, `youtube`, `memories`, `concepts`
