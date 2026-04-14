@@ -1,6 +1,6 @@
 ---
 name: droyd
-description: Crypto Trading | Crypto Search | Crypto Token Filter | Virality Analysis | Technical Analysis Timeseries | Agent File Management | Skill & File Discovery | Scheduled Task Management | Agent Token Launch & Trading | Agent Leaderboard & Discovery -- AI crypto trading wallet via natural language. Use when the user wants to execute AI research tasks, trade crypto autonomously, search crypto content/news, filter projects by market criteria, analyze social virality and mention velocity, get technical analysis timeseries with OHLCV candles and indicators, manage trading positions, follow/unfollow agents, upload/read/search/delete/filter agent files, search/filter agent skills, create new agents, schedule recurring tasks, launch/trade agent tokens, discover/rank agents, view swarm agents, or interact with DROYD agents. Supports agent chat (research, trading, data analysis), content search (semantic/recent/auto), project discovery (by name/symbol/address/concept), project filtering (market cap, momentum, technical indicators, RSI), watchlist management (agent/swarm/combined), virality analysis (mention velocity, z-scores, trend signals), technical analysis timeseries (OHLCV, RSI, MACD, Bollinger Bands, momentum score, mindshare), autonomous trading with stop losses, take profits, quant-based strategies, agent file operations (read/write/search/remove/filter with owned/accessed modes), skill discovery and filtering (search/filter across agent/swarm/droyd/paid with percentile-based ranking), scheduled task management (create/read/update/delete cron-based research and trading tasks), agent token operations (launch on Meteora bonding curve, buy/sell via Jupiter, claim creator/platform fees, check pool status), agent discovery (leaderboard by PnL/revenue/followers, lookup by ID/name/wallet/token, swarm listing), and agent creation with wallet provisioning. Works with Solana (trading) and Ethereum, Base, Arbitrum for token filtering + research.
+description: Crypto Trading | Crypto Search | Crypto Token Filter | Virality Analysis | Technical Analysis Timeseries | Agent File Management | Skill & File Discovery | Scheduled Task Management | Agent Token Launch & Trading | Agent Leaderboard & Discovery | Prediction Markets | Social Intelligence | Wallet Analytics | On-Chain Fundamentals -- AI crypto trading wallet via natural language. Use when the user wants to execute AI research tasks, trade crypto autonomously, search crypto content/news, filter projects by market criteria, analyze social virality and mention velocity, get technical analysis timeseries with OHLCV candles and indicators, manage trading positions, follow/unfollow agents, upload/read/search/delete/filter agent files, search/filter agent skills, create new agents, schedule recurring tasks, launch/trade agent tokens, discover/rank agents, view swarm agents, interact with DROYD agents, browse/search prediction markets across Polymarket and Kalshi, get prediction market news/related markets/prices/leaderboards, discover projects mentioned by Twitter handles, find Twitter handles discussing specific projects, analyze wallet PnL by token, track smart money flows, view top PnL traders, or query on-chain fundamentals (TVL, fees, revenue). Supports agent chat (research, trading, data analysis), content search (semantic/recent/auto), project discovery (by name/symbol/address/concept), project filtering (market cap, momentum, technical indicators, RSI), watchlist management (agent/swarm/combined), virality analysis (mention velocity, z-scores, trend signals), technical analysis timeseries (OHLCV, RSI, MACD, Bollinger Bands, momentum score, mindshare), autonomous trading with stop losses, take profits, quant-based strategies, agent file operations (read/write/search/remove/filter with owned/accessed modes), skill discovery and filtering (search/filter across agent/swarm/droyd/paid with percentile-based ranking), scheduled task management (create/read/update/delete cron-based research and trading tasks), agent token operations (launch on Meteora bonding curve, buy/sell via Jupiter, claim creator/platform fees, check pool status), agent discovery (leaderboard by PnL/revenue/followers, lookup by ID/name/wallet/token, swarm listing), agent creation with wallet provisioning, prediction markets (browse/search/news/related/prices/leaderboard across Polymarket and Kalshi), social intelligence (projects by Twitter handle, handles by project with relevance ranking), wallet analytics (PnL by token with project enrichment, smart money token flows, PnL leaders across chains), and on-chain fundamentals (historical and snapshot TVL/fees/revenue/volume from DefiLlama). Works with Solana (trading) and Ethereum, Base, Arbitrum for token filtering + research.
 ---
 
 # DROYD
@@ -344,6 +344,77 @@ scripts/droyd-agent-swarm.sh '{"limit":10,"sort_by":"pnl","include_attributes":[
 
 **Reference**: [references/agents-filter.md](references/agents-filter.md) | [references/agents-get.md](references/agents-get.md) | [references/agent-swarm.md](references/agent-swarm.md)
 
+### Prediction Markets
+
+Browse, search, and analyze prediction markets across Polymarket and Kalshi:
+
+```bash
+# Browse live markets sorted by volume
+scripts/droyd-pm-browse.sh '{"venue":"polymarket","sort":"volume","limit":25,"live":true}'
+
+# Search markets
+scripts/droyd-pm-search.sh "bitcoin price" "polymarket" "volume" 10
+
+# Get event news
+scripts/droyd-pm-news.sh "12345" 10
+
+# Find related markets
+scripts/droyd-pm-related.sh "will-bitcoin-hit-100k-2025"
+
+# Get market prices
+scripts/droyd-pm-history.sh "0x1234abcd,0x5678efgh"
+
+# Leaderboard
+scripts/droyd-pm-leaderboard.sh '{"venue":"both","limit":25,"polymarket_time_period":"month"}'
+```
+
+**Reference**: [references/prediction-markets.md](references/prediction-markets.md)
+
+### Social Intelligence
+
+Discover projects mentioned by Twitter influencers and find handles discussing specific projects:
+
+```bash
+# Projects mentioned by specific handles
+scripts/droyd-social-projects.sh "inversebrah,DefiIgnas,Route2FI" 30 20 "total_relevance" "market_data,mindshare"
+
+# Handles discussing a project
+scripts/droyd-social-handles.sh "1790" 7 30 "total_relevance" true "twitter_profile,recent_posts"
+```
+
+**Reference**: [references/social.md](references/social.md)
+
+### Wallet Analytics
+
+Analyze wallet PnL, smart money flows, and top traders:
+
+```bash
+# Wallet PnL breakdown by token
+scripts/droyd-wallets-pnl.sh "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" "30d" 20 "technical_analysis,mindshare"
+
+# Smart money token list
+scripts/droyd-wallets-smart-money.sh '{"interval":"7d","trader_risk_level":"high","sort_by":"net_flow","limit":10,"include_attributes":["market_data","technical_analysis"]}'
+
+# Top PnL traders
+scripts/droyd-wallets-pnl-leaders.sh "today" "desc" 10 "solana"
+```
+
+**Reference**: [references/wallets.md](references/wallets.md)
+
+### On-Chain Fundamentals
+
+Historical and snapshot on-chain data (TVL, fees, revenue) from DefiLlama:
+
+```bash
+# Historical TVL by protocol
+scripts/droyd-fundamentals-history.sh '{"metric":"tvl","group_by":"protocol","date_grouping":"daily","entity_limit":10}'
+
+# Current snapshot with change percentages
+scripts/droyd-fundamentals-snapshot.sh '{"metrics":["tvl","fees","revenue"],"group_by":"protocol","timeframes":["7d","30d"],"entity_limit":25}'
+```
+
+**Reference**: [references/fundamentals.md](references/fundamentals.md)
+
 ## Capabilities Overview
 
 ### Search Modes
@@ -457,6 +528,52 @@ scripts/droyd-agent-swarm.sh '{"limit":10,"sort_by":"pnl","include_attributes":[
 ### Supported Chains
 
 `solana` (trading + filtering), `ethereum`, `base`, `arbitrum` (filtering + research)
+
+### Prediction Market Venues
+
+`polymarket`, `kalshi`, `both`
+
+### Prediction Market Sort Options
+
+`liquidity`, `volume`, `created_at`, `ends_at`, `newest`, `closes_soon`, `probability`
+
+### Wallet PnL Durations
+
+`24h`, `7d`, `30d`, `90d`, `all`
+
+### Smart Money Risk Levels
+
+| Level | Trader Style | Description |
+|-------|-------------|-------------|
+| `all` | All styles | No filter |
+| `low` | Risk averse | Conservative traders |
+| `medium` | Risk balancers | Moderate risk |
+| `high` | Trenchers | Aggressive degen traders |
+
+### Smart Money Sort Options
+
+`net_flow`, `smart_traders_no`, `market_cap`
+
+### PnL Leader Types
+
+`yesterday`, `today`, `1W`
+
+### Social Sort Options
+
+- Projects by handle: `total_relevance`, `post_count`, `avg_relevance`, `market_cap`
+- Handles by project: `total_relevance`, `post_count`, `avg_relevance`, `follower_count`
+
+### Fundamentals Metrics
+
+`tvl`, `fees`, `revenue`, `volume`
+
+### Fundamentals Group By
+
+`protocol`, `chain`, `category`
+
+### Fundamentals Timeframes
+
+`1d`, `7d`, `30d`, `90d`, `180d`, `1y`
 
 ## Rate Limits
 
